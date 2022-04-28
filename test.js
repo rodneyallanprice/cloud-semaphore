@@ -49,12 +49,16 @@ async function singleUserCrashWhileHolding() {
     process.exit(-1);
 }
 
+function observe() {
+    ObserveSemaphore('TEST_SEM');
+}
 server.server(process.env.PORT || 3202, ['pdq', 'xyz']);
 
 setTimeout(() => {
-    singleUser();
-    // twoUsersWithDelay();
+    // singleUser();
+    twoUsersWithDelay();
     // singleUserCrashWhileHolding();
     // twoUsersWithCrash()
     // ObserveSemaphore('TEST_SEM');
+    setTimeout(observe, 5000);
 }, 1000);
