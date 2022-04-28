@@ -50,7 +50,11 @@ async function singleUserCrashWhileHolding() {
 }
 
 function observe() {
-    ObserveSemaphore('TEST_SEM');
+    ObserveSemaphore('TEST_SEM')
+    .then(() => {
+        process.exit();
+    }
+    );
 }
 server.server(process.env.PORT || 3202, ['pdq', 'xyz']);
 

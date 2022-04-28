@@ -66,4 +66,5 @@ module.exports.ObserveSemaphore = async function(name) {
         }
     );
     console.log(`Observe response: ${releaseResponse.status}`);
+    console.log(releaseResponse.data);
 }
