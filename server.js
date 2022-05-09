@@ -1,6 +1,7 @@
 const express = require('express');
 const EventEmitter = require('events');
 const crypto = require('crypto');
+const log = require('./log.js');
 
 module.exports.server = function (port, acceptedKeys, loggingFunction) {
     class SemaphoreEmitter extends EventEmitter {};
@@ -17,53 +18,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
 
     app.set('json spaces', 2)
 
-    /******************* logging *******************/
-
-    const logEvents = {
-        'client_actions': true,
-        'client_usage': true,
-        'debug': true
-    };
-
-    function logMessage(msg) {
-        if( loggingFunction ) {
-            loggingFunction( msg );
-        }
-        console.log(msg);
-    }
-
-    function logClientMessage(name, id, actor, action) {
-        const msg = `[${name}:${id}:${actor}] ${action}`;
-        logMessage(msg);
-    }
-
-    function logClientMsg(clientConn, action) {
-        logClientMessage(clientConn.semaphoreName, clientConn.uid, clientConn.actor, action);
-    }
-
-    function logClientUsage(clientConn, action) {
-        if(logEvents['client_usage'] || logEvents['client_actions']) {
-            logClientMsg(clientConn, action);
-        }
-    }
-
-    function logNewClientAction(name, id) {
-        if(logEvents['client_actions']) {
-            logClientMessage(name, id, 'registrar', 'creating client');
-        }
-    }
-
-    function logClientAction(clientConn, action) {
-        if(logEvents['client_actions']) {
-            logClientMsg(clientConn, action);
-        }
-    }
-
-    function logDebugMessage(msg) {
-        if(logEvents['debug']) {
-            logMessage(msg);
-        }
-    }
+    log.setLoggingCallback(loggingFunction);
 
     /******************* create semaphore client *******************/
 
@@ -117,14 +72,14 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
             case '_signaler':
                 break;
             default:
-                logMessage(`THIS SHOULD NEVER HAPPEN: type '${clientConn.actor}' unrecognized.`);
+                log.serverAlert(`THIS SHOULD NEVER HAPPEN: type '${clientConn.actor}' unrecognized.`);
                 break;
         }
     }
 
     function getClientNode(clientConn) {
         const node = clientConn.semaphore.nodes[clientConn.uid]
-        logClientAction(clientConn, 'adding client reference')
+        log.semDebugEvent(clientConn, 'adding client reference')
         node.refCount++;
         return node;
     }
@@ -133,7 +88,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         const node = clientConn.node
         node.refCount--;
         if( node.refCount < 1 ) {
-            logClientAction(clientConn, 'deleting client');
+            log.semDebugEvent(clientConn, 'deleting client');
             delete clientConn.semaphore.nodes[node.id];
         }
     }
@@ -174,7 +129,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
     }
 
     function releaseClientConn(clientConn) {
-        logClientAction(clientConn, 'removing client reference');
+        log.semDebugEvent(clientConn, 'removing client reference');
         releaseClientNode(clientConn);
     }
 
@@ -185,7 +140,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         const node = clientConn.node;
 
         if( node.monitor && node.waiter ) {
-            logClientUsage(clientConn, 'waiting for semaphore');
+            log.semTransition(clientConn, 'waiting for semaphore');
             semaphore.waiting.push(node.id);
         }
     }
@@ -242,7 +197,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         const semaphoreName = req.query.name;
         const client_uid = crypto.randomUUID();
 
-        logNewClientAction(semaphoreName, client_uid);
+        log.semDebugEvent({ actor: 'registrar', semaphoreName: semaphoreName, uid: client_uid }, 'creating client');
 
         const semaphore = guaranteeSemaphoreExists(semaphoreName);
         createClientNode(semaphore, client_uid);
@@ -266,7 +221,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
             promoteIfPossible(clientConn);
         });
 
-        logClientAction(clientConn, 'starting monitor');
+        log.semDebugEvent(clientConn, 'starting monitor');
         const result = await new Promise((resolve, reject) => {
             releaseEmitter.on(clientConn.uid, (action) => {
                 resolve(action);
@@ -276,10 +231,10 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         });
 
         if(result === 'RELEASING') {
-            logClientAction(clientConn, 'stopping monitor');
+            log.semDebugEvent(clientConn, 'stopping monitor');
             res.status(200);
         } else {
-            logClientUsage(clientConn, `stopping monitor after error: ${result}`);
+            log.semTransition(clientConn, `stopping monitor after error: ${result}`);
             res.statusMessage = result;
             res.status(500);
         }
@@ -306,10 +261,10 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         });
 
         if(result === 'RUNNING') {
-            logClientUsage(clientConn, 'holding the semaphore');
+            log.semTransition(clientConn, 'holding the semaphore');
             res.status(200);
         } else {
-            logClientUsage(clientConn, `encountered error: ${result}`);
+            log.semTransition(clientConn, `encountered error: ${result}`);
             res.statusMessage = result;
             res.status(500);
         }
@@ -329,7 +284,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         }
 
         clientConn.semaphore.running = null;
-        logClientUsage(clientConn, 'releasing the semaphore');
+        log.semTransition(clientConn, 'releasing the semaphore');
         releaseEmitter.emit(clientConn.uid, 'RELEASING');
         promoteIfPossible(clientConn);
         res.status(200);
@@ -348,11 +303,9 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
 
         const str = JSON.stringify(SEMAPHORES[req.query.name], null, 4);
 
-        logDebugMessage(str);
-
         res.send(str);
     });
 
 
-    app.listen(port, () => logMessage(`The server is listening on port ${port}`));
+    return app.listen(port, () => log.serverInfo(`The server is listening on port ${port}`));
 }

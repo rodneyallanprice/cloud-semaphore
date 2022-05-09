@@ -1,4 +1,5 @@
 const axios = require('axios');
+const log = require('./log.js');
 
 let SEMAPHORE_HOST='http://localhost:3202';
 
@@ -7,6 +8,10 @@ module.exports.init = function(semaphoreHost) {
 };
 
 module.exports.WaitOnSemaphore = async function(name) {
+    const sem = {
+        name: name
+    };
+    sem.start = Date.now();
     const registrationResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/register?name=${name}`, {'headers': {'x-api-key': 'pdq'}});
 
     axios.get(`${SEMAPHORE_HOST}/semaphore/monitor?name=${name}`,
@@ -18,10 +23,10 @@ module.exports.WaitOnSemaphore = async function(name) {
         }
     )
     .then((response) => {
-        console.log(`Monitor returned: ${response.status}`);
+        log.networkStatus(name, registrationResponse.data, '__monitor', 'Monitor returned: ${response.status}')
     })
     .catch((error) => {
-        console.log(`Monitor encountered: ${response.status} ${error}`);
+        log.networkErrors(name, registrationResponse.data, '__monitor', `encountered: ${error}`)
     });
 
     let response = null;
@@ -35,26 +40,29 @@ module.exports.WaitOnSemaphore = async function(name) {
             }
         );
     } catch(error) {
-        console.log(`Encountered ${error} waiting for sempaphore ${name}`);
+        log.networkErrors(name, registrationResponse.data, '___waiter', `Encountered ${error} waiting for sempaphore ${sem.name}`)
     }
 
     if( response ) {
-        console.log(`Received ${response.status} after waiting.`);
-        return registrationResponse.data;
+        sem.granted = Date.now()
+        log.networkStatus(name, registrationResponse.data, '___waiter', `Received ${response.status} after waiting ${sem.granted - sem.start} ms.`);
+        sem.id = registrationResponse.data;
+        return sem;
     }
     return null;
 }
 
-module.exports.SignalSemaphore = async function(name, id) {
-    const releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/signal?name=${name}`,
+module.exports.SignalSemaphore = async function(sem) {
+    sem.released = Date.now();
+    const releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/signal?name=${sem.name}`,
         {
             'headers': {
                 'x-api-key': 'pdq',
-                'x-client-uuid': id
+                'x-client-uuid': sem.id
             }
         }
     );
-    console.log(`Release response: ${releaseResponse.status}`);
+    log.networkStatus(sem.name, sem.id, '_signaler', `Semaphore ${sem.name} waited: ${sem.granted - sem.start} held: ${sem.released - sem.granted}`)
 }
 
 module.exports.ObserveSemaphore = async function(name) {
@@ -65,6 +73,7 @@ module.exports.ObserveSemaphore = async function(name) {
             }
         }
     );
-    console.log(`Observe response: ${releaseResponse.status}`);
-    console.log(releaseResponse.data);
+    log.networkStatus(name, '                 na                 ', '_observer',
+    `Observe response: ${releaseResponse.status}\n        ${JSON.stringify(releaseResponse.data)}`);
+    return releaseResponse.data;
 }
