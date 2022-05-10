@@ -32,11 +32,11 @@ function updateLogEvents(component, event, value) {
     logEvents[component][event] = value;
 }
 
-module.exports.enableLogEvent = function(component, event) {
+module.exports.enableEvent = function(component, event) {
     updateLogEvents(component, event, true);
 }
 
-module.exports.disableLogEvent = function(component, event) {
+module.exports.disableEvent = function(component, event) {
     updateLogEvents(component, event, false);
 }
 
