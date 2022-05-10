@@ -5,14 +5,14 @@ let loggingFunction = null;
 const logEvents = {
     'server': {
         'info': false,
-        'alert': false,
+        'alert': true,
         'sem_events': false,
         'sem_transition': false,
         'debug': false,
     },
     'client': {
         'network_status': false,
-        'network_errors': false,
+        'network_errors': true,
         'usage': false
     },
     'test': {
