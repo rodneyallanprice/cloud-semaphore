@@ -317,4 +317,15 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         res.send(log.patchEventConfig(req.body));
        return;
     });
+
+    return new Promise((resolve, reject) => {
+        const listener = app.listen(port, (error) => {
+            if( error ) {
+                log.serverAlert(`The server failed to listen with error: ${error}`);
+                reject(error);
+            }
+            log.serverInfo(`The server is listening on port ${port}`);
+            resolve(listener);
+        });
+    });
 }
