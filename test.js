@@ -12,7 +12,7 @@ const {
 } = require('./client');
 
 const SERVER_PORT = process.env.PORT || 3202;
-const SERVER_KEYS = ['pdq', 'xyz'];
+const SERVER_API_KEYS = ['pdq', 'xyz'];
 
 async function singleUser() {
     const sem = await waitOnSemaphore(`TEST_SEM`);
@@ -268,7 +268,7 @@ async function delay(serverDelay, reason) {
 
 async function run_test_case( test ) {
     log.testHarnessInfo('Starting server');
-    test.server = await server.server(SERVER_PORT, SERVER_KEYS);
+    test.server = await server.server(SERVER_PORT, SERVER_API_KEYS);
 
     const result = {
         name: test.name,
@@ -381,7 +381,7 @@ const TEST_CASES = [
 ];
 
 async function disableLogNoise() {
-    const listener = await server.server(SERVER_PORT, SERVER_KEYS)
+    const listener = await server.server(SERVER_PORT, SERVER_API_KEYS)
     await disableLogEvent('server', 'info');
     await stopListener(listener);
     await disableLogEvent('client', 'network_errors');
@@ -410,5 +410,5 @@ async function run() {
     log.testSummary(`${misses} failures in ${swings} tests.`);
 }
 
-init('localhost', SERVER_PORT, false, SERVER_KEYS[0]);
+init('localhost', SERVER_PORT, false, SERVER_API_KEYS[0]);
 run();

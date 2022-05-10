@@ -1,9 +1,11 @@
 const express = require('express');
+const http = require('http');
+const https = require('https');
 const EventEmitter = require('events');
 const crypto = require('crypto');
 const log = require('./log.js');
 
-module.exports.server = function (port, acceptedKeys, loggingFunction) {
+module.exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggingFunction) {
     class SemaphoreEmitter extends EventEmitter {};
 
     const releaseEmitter = new SemaphoreEmitter();
@@ -104,7 +106,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         };
 
         const apiKey = req.header('x-api-key');
-        if( apiKey && acceptedKeys.includes(apiKey)) {
+        if( apiKey && acceptedApiKeys.includes(apiKey)) {
             clientConn.semaphoreName = req.query.name;
             clientConn.uid = req.header('x-client-uuid');
             clientConn.semaphore = SEMAPHORES[clientConn.semaphoreName];
@@ -188,7 +190,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
     // register semaphore
     app.get('/semaphore/register/', (req, res) => {
         const apiKey = req.header('x-api-key');
-        if( !apiKey || !acceptedKeys.includes(apiKey)) {
+        if( !apiKey || !acceptedApiKeys.includes(apiKey)) {
             res.status(401);
             res.end();
             return;
@@ -295,7 +297,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
     // observe semaphore
     app.get('/semaphore/observe/', async (req, res) => {
         const apiKey = req.header('x-api-key');
-        if( !apiKey || !acceptedKeys.includes(apiKey)) {
+        if( !apiKey || !acceptedApiKeys.includes(apiKey)) {
             res.status(401);
             res.end();
             return;
@@ -308,7 +310,7 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
 
     app.patch('/semaphore/logconfig/', async (req, res) => {
         const apiKey = req.header('x-api-key');
-        if( !apiKey || !acceptedKeys.includes(apiKey)) {
+        if( !apiKey || !acceptedApiKeys.includes(apiKey)) {
             res.status(401);
             res.end();
             return;
@@ -319,7 +321,17 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
     });
 
     return new Promise((resolve, reject) => {
-        const listener = app.listen(port, (error) => {
+        let server;
+        if(sslCert && sslKey) {
+            const options = {
+                key: sslKey,
+                cert: sslCert
+            }
+            server = https.createServer(options, app);
+        } else {
+            server = http.createServer(app);
+        }
+        const listener = server.listen(port, (error) => {
             if( error ) {
                 log.serverAlert(`The server failed to listen with error: ${error}`);
                 reject(error);
