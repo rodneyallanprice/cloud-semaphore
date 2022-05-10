@@ -2,6 +2,7 @@ require('dotenv').config()
 const server = require('./server');
 const client = require('./client');
 const log = require('./log.js');
+const { response } = require('express');
 
 const WaitOnSemaphore = client.WaitOnSemaphore;
 const SignalSemaphore = client.SignalSemaphore;
@@ -134,6 +135,61 @@ async function fiveHundredUsersWithDelay() {
     return multipleUsers(500, 1000);
 }
 
+async function WaitOnSemaphoreCanNotReachServer(test) {
+    const clientResult = {}
+    await stopListener(test.server);
+    delete test.server;
+    const sem = await WaitOnSemaphore('TEST_SEM');
+    clientResult.sem = sem;
+    return clientResult
+}
+
+function validateWaitOnSemaphoreCanNotReachServer(clientResult, test) {
+    return new Promise((resolve) => {
+        if( clientResult.sem ) {
+            throw new Error('WaitOnSemaphore returned a non null semaphore when the server could not be reached.');
+        }
+        resolve();
+    });
+}
+
+async function SignalSemaphoreCanNotReachServer(test) {
+    const clientResult = {}
+    const sem = await WaitOnSemaphore('TEST_SEM');
+    clientResult.sem = sem;
+    sem.cancelHandle.cancel();
+    await stopListener(test.server);
+    delete test.server;
+    clientResult.result = await SignalSemaphore(sem);
+    return clientResult;
+}
+
+function validateSignalSemaphoreCanNotReachServer(clientResult, test) {
+    return new Promise((resolve) => {
+        if( clientResult.result ) {
+            throw new Error('SignalSemaphore returned a non null semaphore when the server could not be reached.');
+        }
+        resolve();
+    });
+}
+
+async function ObserveSemaphoreCanNotReachServer(test) {
+    const clientResult = {}
+    await stopListener(test.server);
+    delete test.server;
+    const semData = await ObserveSemaphore('TEST_SEM');
+    clientResult.semData = semData;
+    return clientResult
+}
+
+function validateObserveSemaphoreCanNotReachServer(clientResult, test) {
+    return new Promise((resolve) => {
+        if( clientResult.semData ) {
+            throw new Error('ObserveSemaphore returned a non null response when the server could not be reached.');
+        }
+        resolve();
+    });
+}
 
 function validateSemaphoreClean(sem) {
     return new Promise((resolve, reject) => {
@@ -208,10 +264,10 @@ async function delay(serverDelay, reason) {
 
 function run_test_case( test ) {
     log.testHarnessInfo('Starting server');
-    const testServer = server.server(process.env.PORT || 3202, ['pdq', 'xyz']);
+    test.server = server.server(process.env.PORT || 3202, ['pdq', 'xyz']);
 
     const result = {
-        name: test.name
+        name: test.name,
     }
 
     const timeout = test.timeOut || 10000;
@@ -249,7 +305,10 @@ function run_test_case( test ) {
         result.error = error;
     })
     .then((response) => {
-        return stopListener(testServer);
+        if(test.server) {
+            return stopListener(test.server);
+        }
+        return Promise.resolve();
     })
     .then(() => {
         return result;
@@ -266,32 +325,53 @@ async function stopListener(listener) {
 }
 
 const TEST_CASES = [
+    // {
+    //     name: 'One client can obtain and release a semaphore',
+    //     client: singleUser,
+    //     semNames: ['TEST_SEM'],
+    //     validate: validateSingleUser,
+    //     timeOut: 2000
+    // },
+    // {
+    //     name: 'Two clients can obtain and release a semaphore consecutively',
+    //     client: twoUsersWithDelay,
+    //     semNames: ['TEST_SEM'],
+    //     validate: validateTwoUsersWithDelay,
+    //     timeOut: 10000
+    // },
+    // {
+    //     name: 'If a client crashes while holding a semaphore, the semaphore is released and given to the next waiter.',
+    //     client: twoUsersWithCrash,
+    //     semNames: ['TEST_SEM'],
+    //     validate: validateTwoUsersWithCrash,
+    //     timeOut: 10000
+    // },
+    // {
+    //     name: 'Five hundred clients can request a semaphore concurrently and obtain and release it consecutively',
+    //     client: fiveHundredUsersWithDelay,
+    //     semNames: ['TEST_SEM'],
+    //     validate: validateMultipleUsers,
+    //     timeOut: 100000
+    // },
+    // {
+    //     name: 'WaitOnSemaphore will return null if server can not be reached for any reason.',
+    //     client: WaitOnSemaphoreCanNotReachServer,
+    //     semNames: ['TEST_SEM'],
+    //     validate: validateWaitOnSemaphoreCanNotReachServer,
+    //     timeOut: 100000
+    // },
     {
-        name: 'One client can obtain and release a semaphore',
-        client: singleUser,
+        name: 'SignalSemaphore will return null if server can not be reached for any reason.',
+        client: SignalSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
-        validate: validateSingleUser,
-        timeOut: 2000
+        validate: validateSignalSemaphoreCanNotReachServer,
+        timeOut: 100000
     },
     {
-        name: 'Two clients can obtain and release a semaphore consecutively',
-        client: twoUsersWithDelay,
+        name: 'ObserveSemaphore will return null if server can not be reached for any reason.',
+        client: ObserveSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
-        validate: validateTwoUsersWithDelay,
-        timeOut: 10000
-    },
-    {
-        name: 'If a client crashes while holding a semaphore, the semaphore is released and given to the next waiter.',
-        client: twoUsersWithCrash,
-        semNames: ['TEST_SEM'],
-        validate: validateTwoUsersWithCrash,
-        timeOut: 10000
-    },
-    {
-        name: 'Five hundred clients can request a semaphore concurrently and obtain and release it consecutively',
-        client: fiveHundredUsersWithDelay,
-        semNames: ['TEST_SEM'],
-        validate: validateMultipleUsers,
+        validate: validateObserveSemaphoreCanNotReachServer,
         timeOut: 100000
     }
 ];
