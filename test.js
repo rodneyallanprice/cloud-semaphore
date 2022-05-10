@@ -8,17 +8,36 @@ const SignalSemaphore = client.SignalSemaphore;
 const ObserveSemaphore = client.ObserveSemaphore;
 
 
+
+async function singleUser() {
+    const sem = await WaitOnSemaphore(`TEST_SEM`);
+    await SignalSemaphore(sem);
+    return {
+        'sem': sem
+    };
+}
+
+async function validateSingleUser( clientResult, test ) {
+    return validateSemaphoreUsage(clientResult.sem, 'user1')
+    .then(() => {
+        return validateSemaphoresClean(clientResult, test);
+    });
+}
+
 async function twoUsersWithDelay() {
+    const clientResult = {};
     const user1 = await WaitOnSemaphore(`TEST_SEM`);
+    clientResult.user1 = user1;
     log.testInfo(`user1 holds ${user1.name}`);
-    const result = await new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
         WaitOnSemaphore('TEST_SEM')
         .then((user2) => {
+            clientResult.user2 = user2;
             log.testInfo(`user2 holds ${user2.name}`);
             log.testInfo(`user2 signals ${user2.name}`);
             SignalSemaphore(user2)
             .then(() => {
-                resolve();
+                resolve(clientResult);
             });
         });
         setTimeout(() => {
@@ -28,43 +47,140 @@ async function twoUsersWithDelay() {
     });
 }
 
-async function twoUsersWithCrash() {
-    const user1 = await WaitOnSemaphore(`TEST_SEM`);
-    console.log(`user1 holds ${user1}`);
-    WaitOnSemaphore('TEST_SEM')
-    .then((user2) => {
-        console.log(`user2 holds ${user2}`);
-        console.log(`user2 signals ${user2}`);
-        SignalSemaphore(user2);
+function validateTwoUsersWithDelay( clientResult, test ) {
+    return validateSemaphoreUsage(clientResult.user1, 'user1')
+    .then(() => {
+        return validateSemaphoreUsage(clientResult.user2, 'user2');
+    })
+    .then(() => {
+        return validateSemaphoresClean(clientResult, test);
     });
-    console.log(`user1 signals ${user1}`);
-    // SignalSemaphore(user1)
-    setTimeout(() => {
-        process.exit(-1);
-    }, 1000)
 }
 
-async function singleUser() {
-    const sem = await WaitOnSemaphore(`TEST_SEM`);
-    await SignalSemaphore(sem);
-}
-
-async function singleUserCrashWhileHolding() {
+async function twoUsersWithCrash() {
+    const clientResult = {};
     const user1 = await WaitOnSemaphore(`TEST_SEM`);
-    process.exit(-1);
+    clientResult.user1 = user1;
+    log.testInfo(`user1 holds ${user1.name}`);
+    return await new Promise((resolve, reject) => {
+        WaitOnSemaphore('TEST_SEM')
+        .then((user2) => {
+            clientResult.user2 = user2;
+            log.testInfo(`user2 holds ${user2.name}`);
+            log.testInfo(`user2 signals ${user2.name}`);
+            SignalSemaphore(user2)
+            .then(() => {
+                resolve(clientResult);
+            });
+        });
+        setTimeout(() => {
+            // simulate a crash by closing the monitor connection
+            log.testInfo(`simulating crash while user1 holds ${user1.name}`);
+            user1.cancelHandle.cancel();
+        }, 3000)
+    });
 }
+
+function validateTwoUsersWithCrash( clientResult, test ) {
+    return validateSemaphoreCrashedOwner(clientResult.user1, 'user1')
+    .then(() => {
+        return validateSemaphoreUsage(clientResult.user2, 'user2');
+    })
+    .then(() => {
+        return validateSemaphoresClean(clientResult, test);
+    });
+}
+
+async function multipleUsers(count, delay) {
+    const clientResult = {};
+    const user1 = await WaitOnSemaphore(`TEST_SEM`);
+    clientResult.user1 = user1;
+    log.testInfo(`user1 holds ${user1.name}`);
+    const waiters = [];
+    for( let idx = 0; idx < count; idx++ ) {
+        let Sem;
+        waiters.push(
+            WaitOnSemaphore('TEST_SEM')
+            .then((sem) => {
+                Sem = sem;
+                return SignalSemaphore(sem);
+            })
+            .then(() => {
+                return Sem;
+            })
+        );
+    }
+    setTimeout(() => {
+        log.testInfo(`user1 signals ${user1.name}`);
+        SignalSemaphore(user1)
+    }, delay)
+
+    const results = await Promise.all(waiters);
+    clientResult.users = results;
+    return clientResult;
+}
+
+function validateMultipleUsers( clientResult, test ) {
+    return validateSemaphoreUsage(clientResult.user1, 'user1')
+    .then(() => {
+        return validateMultipleSemaphoreUsage(clientResult.users, 'user');
+    })
+    .then(() => {
+        return validateSemaphoresClean(clientResult, test);
+    });
+}
+
+async function fiveHundredUsersWithDelay() {
+    return multipleUsers(500, 1000);
+}
+
 
 function validateSemaphoreClean(sem) {
-    if( Object.keys(sem.nodes).length > 0 ) {
-        throw new Error(`Semaphore ${sem.name} has leftover nodes`);
+    return new Promise((resolve, reject) => {
+        if( Object.keys(sem.nodes).length > 0 ) {
+            throw new Error(`Semaphore ${sem.name} has leftover nodes`);
+        }
+        if(sem.waiting.length > 0) {
+            throw new Error(`Semaphore ${sem.name} has leftover waiters`);
+        }
+        if(sem.running) {
+            throw new Error(`Semaphore ${sem.name} is still held`);
+        }
+        resolve();
+    });
+}
+
+function validateSemaphoreUsage(sem, owner) {
+    return new Promise((resolve, reject) => {
+        if(!sem.granted ) {
+            throw new Error(`Semaphore ${sem.name} was never granted to ${owner}`);
+        }
+        if(!sem.released ) {
+            throw new Error(`Semaphore ${sem.name} was never released by ${owner}`);
+        }
+        resolve();
+    });
+}
+
+async function validateMultipleSemaphoreUsage(users, owner) {
+    let userResults = [];
+    for(let idx = 0; idx < users.length; idx++ ) {
+        userResults.push(validateSemaphoreUsage(users[idx], `${owner}${idx + 2}`));
     }
-    if(sem.waiting.length > 0) {
-        throw new Error(`Semaphore ${sem.name} has leftover waiters`);
-    }
-    if(sem.running) {
-        throw new Error(`Semaphore ${sem.name} is still held`);
-    }
-    return;
+    return await Promise.all(userResults);
+}
+
+
+function validateSemaphoreCrashedOwner(sem, owner) {
+    return new Promise((resolve, reject) => {
+        if(!sem.granted ) {
+            throw new Error(`Semaphore ${sem.name} was never granted to ${owner}`);
+        }
+        if(sem.released ) {
+            throw new Error(`Semaphore ${sem.name} was unexpectedly released by ${owner}`);
+        }
+        resolve();
+    });
 }
 
 async function validateSemaphoresClean( clientResult, test ) {
@@ -112,8 +228,8 @@ function run_test_case( test ) {
     .then(() => {
         return test.client(test)
     })
-    .then((res) => {
-        return test.validate(res, test)
+    .then((clientResult) => {
+        return test.validate(clientResult, test)
     })
     .then(() => {
         return result;
@@ -154,15 +270,29 @@ const TEST_CASES = [
         name: 'One client can obtain and release a semaphore',
         client: singleUser,
         semNames: ['TEST_SEM'],
-        validate: validateSemaphoresClean,
+        validate: validateSingleUser,
         timeOut: 2000
     },
     {
         name: 'Two clients can obtain and release a semaphore consecutively',
         client: twoUsersWithDelay,
         semNames: ['TEST_SEM'],
-        validate: validateSemaphoresClean,
+        validate: validateTwoUsersWithDelay,
         timeOut: 10000
+    },
+    {
+        name: 'If a client crashes while holding a semaphore, the semaphore is released and given to the next waiter.',
+        client: twoUsersWithCrash,
+        semNames: ['TEST_SEM'],
+        validate: validateTwoUsersWithCrash,
+        timeOut: 10000
+    },
+    {
+        name: 'Five hundred clients can request a semaphore concurrently and obtain and release it consecutively',
+        client: fiveHundredUsersWithDelay,
+        semNames: ['TEST_SEM'],
+        validate: validateMultipleUsers,
+        timeOut: 100000
     }
 ];
 
