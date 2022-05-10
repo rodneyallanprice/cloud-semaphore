@@ -99,3 +99,38 @@ module.exports.ObserveSemaphore = async function(name) {
     `Observe response: ${releaseResponse.status}\n        ${JSON.stringify(releaseResponse.data)}`);
     return releaseResponse.data;
 }
+
+async function updateEventConfig(component, event, value) {
+    let response;
+    const body = {};
+    body[component] = {};
+    body[component][event] = value;
+    const args = {
+        'headers': {
+            'x-api-key': 'pdq'
+        }
+    }
+    try {
+        response = await axios.patch(`${SEMAPHORE_HOST}/semaphore/logconfig`, body, args);
+    } catch (error) {
+        log.networkError('na    ', 'na                                  ', '__updater', `Encountered ${error} updating log config`);
+        return null;
+    }
+    log.networkStatus('na    ', 'na                                  ', '__updater',
+    `log config response: ${response.status}\n        ${JSON.stringify(response.data)}`);
+    return response.data;
+}
+
+module.exports.disableLogEvent = async function(component, event) {
+    if(component != 'server') {
+        return Promise.resolve(log.disableEvent(component, event));
+    }
+    return await updateEventConfig(component, event, false);
+}
+
+module.exports.enableLogEvent = async function(component, event) {
+    if(component != 'server') {
+        return Promise.resolve(log.enableEvent(component, event));
+    }
+    return await updateEventConfig(component, event, true);
+}
