@@ -1,9 +1,7 @@
 require('dotenv').config()
 const server = require('./server');
-// const client = require('./client');
 const log = require('./log.js');
 const { response } = require('express');
-
 const {
     waitOnSemaphore,
     signalSemaphore,
