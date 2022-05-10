@@ -35,7 +35,7 @@ module.exports.WaitOnSemaphore = async function(name) {
         log.networkStatus(name, registrationResponse.data, '__monitor', 'Monitor returned: ${response.status}')
     })
     .catch((error) => {
-        log.networkErrors(name, registrationResponse.data, '__monitor', `encountered: ${error}`)
+        log.networkError(name, registrationResponse.data, '__monitor', `encountered: ${error}`)
     });
 
     let response = null;
@@ -49,7 +49,7 @@ module.exports.WaitOnSemaphore = async function(name) {
             }
         );
     } catch(error) {
-        log.networkErrors(name, registrationResponse.data, '___waiter', `Encountered ${error} waiting for sempaphore ${sem.name}`)
+        log.networkError(name, registrationResponse.data, '___waiter', `Encountered ${error} waiting for sempaphore ${sem.name}`)
     }
 
     if( response ) {
@@ -92,7 +92,7 @@ module.exports.ObserveSemaphore = async function(name) {
             }
         );
     } catch (error) {
-        log.networkError(sem.name, sem.id, '_observer', `Encountered ${error} observing sempaphore ${sem.name}`);
+        log.networkError(name, '                 na                 ', '_observer', `Encountered ${error} observing sempaphore ${name}`);
         return null;
     }
     log.networkStatus(name, '                 na                 ', '_observer',

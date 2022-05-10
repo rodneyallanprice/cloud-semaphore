@@ -86,7 +86,7 @@ module.exports.networkStatus = function(name, id, actor, action) {
     }
 }
 
-module.exports.networkErrors = function(name, key, actor, action) {
+module.exports.networkError = function(name, key, actor, action) {
     if(logEvents['client']['network_errors']) {
         message('client', `[${name}:${key}:${actor}] ${action}`);
     }
