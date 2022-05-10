@@ -14,12 +14,15 @@ module.exports.WaitOnSemaphore = async function(name) {
     sem.start = Date.now();
     const registrationResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/register?name=${name}`, {'headers': {'x-api-key': 'pdq'}});
 
+    sem.cancelHandle = axios.CancelToken.source();
+
     axios.get(`${SEMAPHORE_HOST}/semaphore/monitor?name=${name}`,
         {
             'headers': {
                 'x-api-key': 'pdq',
                 'x-client-uuid': registrationResponse.data
-            }
+            },
+            cancelToken: sem.cancelHandle.token
         }
     )
     .then((response) => {
