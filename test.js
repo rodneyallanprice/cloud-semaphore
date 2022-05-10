@@ -3,6 +3,7 @@ const server = require('./server');
 const log = require('./log.js');
 const { response } = require('express');
 const {
+    init,
     waitOnSemaphore,
     signalSemaphore,
     observeSemaphore,
@@ -10,7 +11,8 @@ const {
     enableLogEvent
 } = require('./client');
 
-
+const SERVER_PORT = process.env.PORT || 3202;
+const SERVER_KEYS = ['pdq', 'xyz'];
 
 async function singleUser() {
     const sem = await waitOnSemaphore(`TEST_SEM`);
@@ -266,7 +268,7 @@ async function delay(serverDelay, reason) {
 
 async function run_test_case( test ) {
     log.testHarnessInfo('Starting server');
-    test.server = await server.server(process.env.PORT || 3202, ['pdq', 'xyz']);
+    test.server = await server.server(SERVER_PORT, SERVER_KEYS);
 
     const result = {
         name: test.name,
@@ -379,7 +381,7 @@ const TEST_CASES = [
 ];
 
 async function disableLogNoise() {
-    const listener = await server.server(process.env.PORT || 3202, ['pdq', 'xyz'])
+    const listener = await server.server(SERVER_PORT, SERVER_KEYS)
     await disableLogEvent('server', 'info');
     await stopListener(listener);
     await disableLogEvent('client', 'network_errors');
@@ -408,4 +410,5 @@ async function run() {
     log.testSummary(`${misses} failures in ${swings} tests.`);
 }
 
+init('localhost', SERVER_PORT, false, SERVER_KEYS[0]);
 run();

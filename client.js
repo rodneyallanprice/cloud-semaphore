@@ -1,10 +1,12 @@
 const axios = require('axios');
 const log = require('./log.js');
 
-let SEMAPHORE_HOST='http://localhost:3202';
+let SEMAPHORE_HOST='';
+let API_KEY = '';
 
-module.exports.init = function(semaphoreHost) {
-    SEMAPHORE_HOST = semaphoreHost;
+module.exports.init = function(semaphoreHost, semaphorePort, secure, apiKey) {
+    SEMAPHORE_HOST = `http${secure ? 's': ''}://${semaphoreHost}${semaphorePort? ':' + semaphorePort : '' }`;
+    API_KEY = apiKey;
 };
 
 module.exports.waitOnSemaphore = async function(name) {
@@ -15,7 +17,7 @@ module.exports.waitOnSemaphore = async function(name) {
 
     let registrationResponse;
     try {
-        registrationResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/register?name=${name}`, {'headers': {'x-api-key': 'pdq'}});
+        registrationResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/register?name=${name}`, {'headers': {'x-api-key': API_KEY}});
     } catch (error) {
         return null;
     }
@@ -25,7 +27,7 @@ module.exports.waitOnSemaphore = async function(name) {
     axios.get(`${SEMAPHORE_HOST}/semaphore/monitor?name=${name}`,
         {
             'headers': {
-                'x-api-key': 'pdq',
+                'x-api-key': API_KEY,
                 'x-client-uuid': registrationResponse.data
             },
             cancelToken: sem.cancelHandle.token
@@ -43,7 +45,7 @@ module.exports.waitOnSemaphore = async function(name) {
         response = await axios.get(`${SEMAPHORE_HOST}/semaphore/wait?name=${name}`,
             {
                 'headers': {
-                    'x-api-key': 'pdq',
+                    'x-api-key': API_KEY,
                     'x-client-uuid': registrationResponse.data
                 }
             }
@@ -68,7 +70,7 @@ module.exports.signalSemaphore = async function(sem) {
         releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/signal?name=${sem.name}`,
             {
                 'headers': {
-                    'x-api-key': 'pdq',
+                    'x-api-key': API_KEY,
                     'x-client-uuid': sem.id
                 }
             }
@@ -87,7 +89,7 @@ module.exports.observeSemaphore = async function(name) {
         releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/observe?name=${name}`,
             {
                 'headers': {
-                    'x-api-key': 'pdq'
+                    'x-api-key': API_KEY
                 }
             }
         );
@@ -107,7 +109,7 @@ async function updateEventConfig(component, event, value) {
     body[component][event] = value;
     const args = {
         'headers': {
-            'x-api-key': 'pdq'
+            'x-api-key': API_KEY
         }
     }
     try {
