@@ -7,7 +7,7 @@ module.exports.init = function(semaphoreHost) {
     SEMAPHORE_HOST = semaphoreHost;
 };
 
-module.exports.WaitOnSemaphore = async function(name) {
+module.exports.waitOnSemaphore = async function(name) {
     const sem = {
         name: name
     };
@@ -61,7 +61,7 @@ module.exports.WaitOnSemaphore = async function(name) {
     return null;
 }
 
-module.exports.SignalSemaphore = async function(sem) {
+module.exports.signalSemaphore = async function(sem) {
     sem.released = Date.now();
     let releaseResponse;
     try {
@@ -81,7 +81,7 @@ module.exports.SignalSemaphore = async function(sem) {
     return releaseResponse;
 }
 
-module.exports.ObserveSemaphore = async function(name) {
+module.exports.observeSemaphore = async function(name) {
     let releaseResponse;
     try {
         releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/observe?name=${name}`,

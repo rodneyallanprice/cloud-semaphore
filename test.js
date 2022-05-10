@@ -1,18 +1,22 @@
 require('dotenv').config()
 const server = require('./server');
-const client = require('./client');
+// const client = require('./client');
 const log = require('./log.js');
 const { response } = require('express');
 
-const WaitOnSemaphore = client.WaitOnSemaphore;
-const SignalSemaphore = client.SignalSemaphore;
-const ObserveSemaphore = client.ObserveSemaphore;
+const {
+    waitOnSemaphore,
+    signalSemaphore,
+    observeSemaphore,
+    disableLogEvent,
+    enableLogEvent
+} = require('./client');
 
 
 
 async function singleUser() {
-    const sem = await WaitOnSemaphore(`TEST_SEM`);
-    await SignalSemaphore(sem);
+    const sem = await waitOnSemaphore(`TEST_SEM`);
+    await signalSemaphore(sem);
     return {
         'sem': sem
     };
@@ -27,23 +31,23 @@ async function validateSingleUser( clientResult, test ) {
 
 async function twoUsersWithDelay() {
     const clientResult = {};
-    const user1 = await WaitOnSemaphore(`TEST_SEM`);
+    const user1 = await waitOnSemaphore(`TEST_SEM`);
     clientResult.user1 = user1;
     log.testInfo(`user1 holds ${user1.name}`);
     return await new Promise((resolve, reject) => {
-        WaitOnSemaphore('TEST_SEM')
+        waitOnSemaphore('TEST_SEM')
         .then((user2) => {
             clientResult.user2 = user2;
             log.testInfo(`user2 holds ${user2.name}`);
             log.testInfo(`user2 signals ${user2.name}`);
-            SignalSemaphore(user2)
+            signalSemaphore(user2)
             .then(() => {
                 resolve(clientResult);
             });
         });
         setTimeout(() => {
             log.testInfo(`user1 signals ${user1.name}`);
-            SignalSemaphore(user1)
+            signalSemaphore(user1)
         }, 1000)
     });
 }
@@ -60,16 +64,16 @@ function validateTwoUsersWithDelay( clientResult, test ) {
 
 async function twoUsersWithCrash() {
     const clientResult = {};
-    const user1 = await WaitOnSemaphore(`TEST_SEM`);
+    const user1 = await waitOnSemaphore(`TEST_SEM`);
     clientResult.user1 = user1;
     log.testInfo(`user1 holds ${user1.name}`);
     return await new Promise((resolve, reject) => {
-        WaitOnSemaphore('TEST_SEM')
+        waitOnSemaphore('TEST_SEM')
         .then((user2) => {
             clientResult.user2 = user2;
             log.testInfo(`user2 holds ${user2.name}`);
             log.testInfo(`user2 signals ${user2.name}`);
-            SignalSemaphore(user2)
+            signalSemaphore(user2)
             .then(() => {
                 resolve(clientResult);
             });
@@ -94,17 +98,17 @@ function validateTwoUsersWithCrash( clientResult, test ) {
 
 async function multipleUsers(count, delay) {
     const clientResult = {};
-    const user1 = await WaitOnSemaphore(`TEST_SEM`);
+    const user1 = await waitOnSemaphore(`TEST_SEM`);
     clientResult.user1 = user1;
     log.testInfo(`user1 holds ${user1.name}`);
     const waiters = [];
     for( let idx = 0; idx < count; idx++ ) {
         let Sem;
         waiters.push(
-            WaitOnSemaphore('TEST_SEM')
+            waitOnSemaphore('TEST_SEM')
             .then((sem) => {
                 Sem = sem;
-                return SignalSemaphore(sem);
+                return signalSemaphore(sem);
             })
             .then(() => {
                 return Sem;
@@ -113,7 +117,7 @@ async function multipleUsers(count, delay) {
     }
     setTimeout(() => {
         log.testInfo(`user1 signals ${user1.name}`);
-        SignalSemaphore(user1)
+        signalSemaphore(user1)
     }, delay)
 
     const results = await Promise.all(waiters);
@@ -139,7 +143,7 @@ async function WaitOnSemaphoreCanNotReachServer(test) {
     const clientResult = {}
     await stopListener(test.server);
     delete test.server;
-    const sem = await WaitOnSemaphore('TEST_SEM');
+    const sem = await waitOnSemaphore('TEST_SEM');
     clientResult.sem = sem;
     return clientResult
 }
@@ -147,7 +151,7 @@ async function WaitOnSemaphoreCanNotReachServer(test) {
 function validateWaitOnSemaphoreCanNotReachServer(clientResult, test) {
     return new Promise((resolve) => {
         if( clientResult.sem ) {
-            throw new Error('WaitOnSemaphore returned a non null semaphore when the server could not be reached.');
+            throw new Error('waitOnSemaphore returned a non null semaphore when the server could not be reached.');
         }
         resolve();
     });
@@ -155,19 +159,19 @@ function validateWaitOnSemaphoreCanNotReachServer(clientResult, test) {
 
 async function SignalSemaphoreCanNotReachServer(test) {
     const clientResult = {}
-    const sem = await WaitOnSemaphore('TEST_SEM');
+    const sem = await waitOnSemaphore('TEST_SEM');
     clientResult.sem = sem;
     sem.cancelHandle.cancel();
     await stopListener(test.server);
     delete test.server;
-    clientResult.result = await SignalSemaphore(sem);
+    clientResult.result = await signalSemaphore(sem);
     return clientResult;
 }
 
 function validateSignalSemaphoreCanNotReachServer(clientResult, test) {
     return new Promise((resolve) => {
         if( clientResult.result ) {
-            throw new Error('SignalSemaphore returned a non null semaphore when the server could not be reached.');
+            throw new Error('signalSemaphore returned a non null semaphore when the server could not be reached.');
         }
         resolve();
     });
@@ -177,7 +181,7 @@ async function ObserveSemaphoreCanNotReachServer(test) {
     const clientResult = {}
     await stopListener(test.server);
     delete test.server;
-    const semData = await ObserveSemaphore('TEST_SEM');
+    const semData = await observeSemaphore('TEST_SEM');
     clientResult.semData = semData;
     return clientResult
 }
@@ -185,7 +189,7 @@ async function ObserveSemaphoreCanNotReachServer(test) {
 function validateObserveSemaphoreCanNotReachServer(clientResult, test) {
     return new Promise((resolve) => {
         if( clientResult.semData ) {
-            throw new Error('ObserveSemaphore returned a non null response when the server could not be reached.');
+            throw new Error('observeSemaphore returned a non null response when the server could not be reached.');
         }
         resolve();
     });
@@ -243,7 +247,7 @@ async function validateSemaphoresClean( clientResult, test ) {
     if(test.semNames && test.semNames.length > 0) {
         const semList = await Promise.all(
             test.semNames.map((semName) => {
-                return ObserveSemaphore(semName);
+                return observeSemaphore(semName);
             })
         );
         semList.forEach((sem) => {
@@ -354,21 +358,21 @@ const TEST_CASES = [
         timeOut: 100000
     },
     {
-        name: 'WaitOnSemaphore will return null if server can not be reached for any reason.',
+        name: 'waitOnSemaphore will return null if server can not be reached for any reason.',
         client: WaitOnSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
         validate: validateWaitOnSemaphoreCanNotReachServer,
         timeOut: 100000
     },
     {
-        name: 'SignalSemaphore will return null if server can not be reached for any reason.',
+        name: 'signalSemaphore will return null if server can not be reached for any reason.',
         client: SignalSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
         validate: validateSignalSemaphoreCanNotReachServer,
         timeOut: 100000
     },
     {
-        name: 'ObserveSemaphore will return null if server can not be reached for any reason.',
+        name: 'observeSemaphore will return null if server can not be reached for any reason.',
         client: ObserveSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
         validate: validateObserveSemaphoreCanNotReachServer,
@@ -378,9 +382,9 @@ const TEST_CASES = [
 
 async function disableLogNoise() {
     const listener = await server.server(process.env.PORT || 3202, ['pdq', 'xyz'])
-    await client.disableLogEvent('server', 'info');
+    await disableLogEvent('server', 'info');
     await stopListener(listener);
-    await client.disableLogEvent('client', 'network_errors');
+    await disableLogEvent('client', 'network_errors');
 }
 
 async function run() {
