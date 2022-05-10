@@ -325,41 +325,41 @@ async function stopListener(listener) {
 }
 
 const TEST_CASES = [
-    // {
-    //     name: 'One client can obtain and release a semaphore',
-    //     client: singleUser,
-    //     semNames: ['TEST_SEM'],
-    //     validate: validateSingleUser,
-    //     timeOut: 2000
-    // },
-    // {
-    //     name: 'Two clients can obtain and release a semaphore consecutively',
-    //     client: twoUsersWithDelay,
-    //     semNames: ['TEST_SEM'],
-    //     validate: validateTwoUsersWithDelay,
-    //     timeOut: 10000
-    // },
-    // {
-    //     name: 'If a client crashes while holding a semaphore, the semaphore is released and given to the next waiter.',
-    //     client: twoUsersWithCrash,
-    //     semNames: ['TEST_SEM'],
-    //     validate: validateTwoUsersWithCrash,
-    //     timeOut: 10000
-    // },
-    // {
-    //     name: 'Five hundred clients can request a semaphore concurrently and obtain and release it consecutively',
-    //     client: fiveHundredUsersWithDelay,
-    //     semNames: ['TEST_SEM'],
-    //     validate: validateMultipleUsers,
-    //     timeOut: 100000
-    // },
-    // {
-    //     name: 'WaitOnSemaphore will return null if server can not be reached for any reason.',
-    //     client: WaitOnSemaphoreCanNotReachServer,
-    //     semNames: ['TEST_SEM'],
-    //     validate: validateWaitOnSemaphoreCanNotReachServer,
-    //     timeOut: 100000
-    // },
+    {
+        name: 'One client can obtain and release a semaphore',
+        client: singleUser,
+        semNames: ['TEST_SEM'],
+        validate: validateSingleUser,
+        timeOut: 2000
+    },
+    {
+        name: 'Two clients can obtain and release a semaphore consecutively',
+        client: twoUsersWithDelay,
+        semNames: ['TEST_SEM'],
+        validate: validateTwoUsersWithDelay,
+        timeOut: 10000
+    },
+    {
+        name: 'If a client crashes while holding a semaphore, the semaphore is released and given to the next waiter.',
+        client: twoUsersWithCrash,
+        semNames: ['TEST_SEM'],
+        validate: validateTwoUsersWithCrash,
+        timeOut: 10000
+    },
+    {
+        name: 'Five hundred clients can request a semaphore concurrently and obtain and release it consecutively',
+        client: fiveHundredUsersWithDelay,
+        semNames: ['TEST_SEM'],
+        validate: validateMultipleUsers,
+        timeOut: 100000
+    },
+    {
+        name: 'WaitOnSemaphore will return null if server can not be reached for any reason.',
+        client: WaitOnSemaphoreCanNotReachServer,
+        semNames: ['TEST_SEM'],
+        validate: validateWaitOnSemaphoreCanNotReachServer,
+        timeOut: 100000
+    },
     {
         name: 'SignalSemaphore will return null if server can not be reached for any reason.',
         client: SignalSemaphoreCanNotReachServer,
