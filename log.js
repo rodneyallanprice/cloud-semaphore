@@ -4,7 +4,7 @@ let loggingFunction = null;
 
 const logEvents = {
     'server': {
-        'info': false,
+        'info': true,
         'alert': true,
         'sem_events': false,
         'sem_transition': false,
@@ -30,14 +30,30 @@ module.exports.setLoggingCallback = function(callback) {
 
 function updateLogEvents(component, event, value) {
     logEvents[component][event] = value;
+    return logEvents;
 }
 
 module.exports.enableEvent = function(component, event) {
-    updateLogEvents(component, event, true);
+    return updateLogEvents(component, event, true);
 }
 
 module.exports.disableEvent = function(component, event) {
-    updateLogEvents(component, event, false);
+    return updateLogEvents(component, event, false);
+}
+
+function deepMerge(current, updates) {
+    for( key of Object.keys(updates) ) {
+      if (!current.hasOwnProperty(key) || typeof updates[key] !== 'object') {
+          current[key] = updates[key];
+      } else {
+          deepMerge(current[key], updates[key]);
+      }
+    }
+    return current;
+  }
+
+module.exports.patchEventConfig = function(modifications) {
+    return deepMerge(logEvents, modifications);
 }
 
 function message(who, what) {
