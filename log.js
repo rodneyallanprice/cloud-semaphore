@@ -112,13 +112,13 @@ module.exports.testFlaw = function(name, error) {
 
 module.exports.testSuccess = function(name) {
     if(logEvents['test']['results']) {
-        message('test  ', `${name}: success`);
+        message('test  ', `success: ${name}`);
     }
 }
 
 module.exports.testFailure = function(name, error) {
     if(logEvents['test']['results']) {
-        message('test  ', `${name}: failure - ${error}`);
+        message('test  ', `failure: ${name} - ${error}`);
     }
 }
 
