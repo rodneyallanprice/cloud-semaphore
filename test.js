@@ -379,7 +379,8 @@ const TEST_CASES = [
 async function run() {
     let swings = 0;
     let misses = 0;
-
+    log.disableEvent('server', 'info');
+    log.disableEvent('client', 'network_errors');
     for( let i = 0; i < TEST_CASES.length; i++) {
         await new Promise( async (resolve) => {
             swings++;
