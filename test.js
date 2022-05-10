@@ -262,9 +262,9 @@ async function delay(serverDelay, reason) {
     });
 }
 
-function run_test_case( test ) {
+async function run_test_case( test ) {
     log.testHarnessInfo('Starting server');
-    test.server = server.server(process.env.PORT || 3202, ['pdq', 'xyz']);
+    test.server = await server.server(process.env.PORT || 3202, ['pdq', 'xyz']);
 
     const result = {
         name: test.name,
@@ -376,11 +376,19 @@ const TEST_CASES = [
     }
 ];
 
+async function disableLogNoise() {
+    const listener = await server.server(process.env.PORT || 3202, ['pdq', 'xyz'])
+    await client.disableLogEvent('server', 'info');
+    await stopListener(listener);
+    await client.disableLogEvent('client', 'network_errors');
+}
+
 async function run() {
     let swings = 0;
     let misses = 0;
-    log.disableEvent('server', 'info');
-    log.disableEvent('client', 'network_errors');
+
+    await disableLogNoise();
+
     for( let i = 0; i < TEST_CASES.length; i++) {
         await new Promise( async (resolve) => {
             swings++;
