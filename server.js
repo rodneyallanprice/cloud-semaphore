@@ -306,6 +306,15 @@ module.exports.server = function (port, acceptedKeys, loggingFunction) {
         res.send(str);
     });
 
+    app.patch('/semaphore/logconfig/', async (req, res) => {
+        const apiKey = req.header('x-api-key');
+        if( !apiKey || !acceptedKeys.includes(apiKey)) {
+            res.status(401);
+            res.end();
+            return;
+        }
 
-    return app.listen(port, () => log.serverInfo(`The server is listening on port ${port}`));
+        res.send(log.patchEventConfig(req.body));
+       return;
+    });
 }
