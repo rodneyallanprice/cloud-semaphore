@@ -12,7 +12,13 @@ module.exports.WaitOnSemaphore = async function(name) {
         name: name
     };
     sem.start = Date.now();
-    const registrationResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/register?name=${name}`, {'headers': {'x-api-key': 'pdq'}});
+
+    let registrationResponse;
+    try {
+        registrationResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/register?name=${name}`, {'headers': {'x-api-key': 'pdq'}});
+    } catch (error) {
+        return null;
+    }
 
     sem.cancelHandle = axios.CancelToken.source();
 
@@ -57,25 +63,38 @@ module.exports.WaitOnSemaphore = async function(name) {
 
 module.exports.SignalSemaphore = async function(sem) {
     sem.released = Date.now();
-    const releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/signal?name=${sem.name}`,
-        {
-            'headers': {
-                'x-api-key': 'pdq',
-                'x-client-uuid': sem.id
+    let releaseResponse;
+    try {
+        releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/signal?name=${sem.name}`,
+            {
+                'headers': {
+                    'x-api-key': 'pdq',
+                    'x-client-uuid': sem.id
+                }
             }
-        }
-    );
-    log.networkStatus(sem.name, sem.id, '_signaler', `Semaphore ${sem.name} waited: ${sem.granted - sem.start} held: ${sem.released - sem.granted}`)
+        );
+    } catch (error) {
+        log.networkError(sem.name, sem.id, '_signaler', `Encountered ${error} signaling sempaphore ${sem.name}`);
+        return null;
+    }
+    log.networkStatus(sem.name, sem.id, '_signaler', `Semaphore ${sem.name} waited: ${sem.granted - sem.start} held: ${sem.released - sem.granted}`);
+    return releaseResponse;
 }
 
 module.exports.ObserveSemaphore = async function(name) {
-    const releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/observe?name=${name}`,
-        {
-            'headers': {
-                'x-api-key': 'pdq'
+    let releaseResponse;
+    try {
+        releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/observe?name=${name}`,
+            {
+                'headers': {
+                    'x-api-key': 'pdq'
+                }
             }
-        }
-    );
+        );
+    } catch (error) {
+        log.networkError(sem.name, sem.id, '_observer', `Encountered ${error} observing sempaphore ${sem.name}`);
+        return null;
+    }
     log.networkStatus(name, '                 na                 ', '_observer',
     `Observe response: ${releaseResponse.status}\n        ${JSON.stringify(releaseResponse.data)}`);
     return releaseResponse.data;
