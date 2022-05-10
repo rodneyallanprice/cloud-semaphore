@@ -24,7 +24,7 @@ const logEvents = {
     }
 };
 
-module.exports.setLoggingCallback = function(callback) {
+exports.setLoggingCallback = function(callback) {
     loggingFunction = callback;
 }
 
@@ -33,11 +33,11 @@ function updateLogEvents(component, event, value) {
     return logEvents;
 }
 
-module.exports.enableEvent = function(component, event) {
+exports.enableEvent = function(component, event) {
     return updateLogEvents(component, event, true);
 }
 
-module.exports.disableEvent = function(component, event) {
+exports.disableEvent = function(component, event) {
     return updateLogEvents(component, event, false);
 }
 
@@ -52,7 +52,7 @@ function deepMerge(current, updates) {
     return current;
   }
 
-module.exports.patchEventConfig = function(modifications) {
+exports.patchEventConfig = function(modifications) {
     return deepMerge(logEvents, modifications);
 }
 
@@ -72,73 +72,73 @@ function clientMsg(clientConn, action) {
     clientMessage(clientConn.semaphoreName, clientConn.uid, clientConn.actor, action);
 }
 
-module.exports.semTransition = function(clientConn, action) {
+exports.semTransition = function(clientConn, action) {
     if(logEvents['server']['sem_transition'] || logEvents['server']['sem_events']) {
         clientMsg(clientConn, action);
     }
 }
 
-module.exports.semDebugEvent = function(clientConn, action) {
+exports.semDebugEvent = function(clientConn, action) {
     if(logEvents['server']['sem_events']) {
         clientMsg(clientConn, action);
     }
 }
 
-module.exports.serverInfo = function (msg) {
+exports.serverInfo = function (msg) {
     if(logEvents['server']['info']) {
         message('server', msg);
     }
 }
 
-module.exports.serverAlert = function (msg) {
+exports.serverAlert = function (msg) {
     if(logEvents['server']['alert']) {
         message('server', msg);
     }
 }
 
-module.exports.networkStatus = function(name, id, actor, action) {
+exports.networkStatus = function(name, id, actor, action) {
     if(logEvents['client']['network_status']) {
         message('client', `[${name}:${id}:${actor}] ${action}`);
     }
 }
 
-module.exports.networkError = function(name, key, actor, action) {
+exports.networkError = function(name, key, actor, action) {
     if(logEvents['client']['network_errors']) {
         message('client', `[${name}:${key}:${actor}] ${action}`);
     }
 }
 
-module.exports.testHarnessInfo = function(info) {
+exports.testHarnessInfo = function(info) {
     if(logEvents['test']['harness_info']) {
         message('test  ', info);
     }
 }
 
-module.exports.testInfo = function(info) {
+exports.testInfo = function(info) {
     if(logEvents['test']['info']) {
         message('test  ', info);
     }
 }
 
-module.exports.testFlaw = function(name, error) {
+exports.testFlaw = function(name, error) {
     if(logEvents['test']['flaw']) {
         message('test  ', `Test ${name} failed to complete with error: ${error}`);
     }
 }
 
-module.exports.testSuccess = function(name) {
+exports.testSuccess = function(name) {
     if(logEvents['test']['results']) {
         message('test  ', `success: ${name}`);
     }
 }
 
-module.exports.testFailure = function(name, error) {
+exports.testFailure = function(name, error) {
     if(logEvents['test']['results']) {
         message('test  ', `failure: ${name} - ${error}`);
     }
 }
 
-module.exports.testSummary = function(summary) {
+exports.testSummary = function(summary) {
     if(logEvents['test']['summary']) {
         message('test  ', summary);
     }
