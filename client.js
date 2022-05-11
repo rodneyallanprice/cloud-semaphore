@@ -113,7 +113,7 @@ async function updateEventConfig(component, event, value) {
         }
     }
     try {
-        response = await axios.patch(`${SEMAPHORE_HOST}/semaphore/logconfig`, body, args);
+        response = await axios.patch(`${SEMAPHORE_HOST}/logconfig`, body, args);
     } catch (error) {
         log.networkError('na    ', 'na                                  ', '__updater', `Encountered ${error} updating log config`);
         return null;

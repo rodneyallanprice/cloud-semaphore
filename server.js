@@ -308,7 +308,7 @@ module.exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggin
         res.send(str);
     });
 
-    app.patch('/semaphore/logconfig/', async (req, res) => {
+    app.patch('/logconfig/', async (req, res) => {
         const apiKey = req.header('x-api-key');
         if( !apiKey || !acceptedApiKeys.includes(apiKey)) {
             res.status(401);
