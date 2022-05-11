@@ -37,7 +37,7 @@ module.exports.waitOnSemaphore = async function(name) {
         log.networkStatus(name, registrationResponse.data, `__monitor', 'Monitor returned: ${response.status}`)
     })
     .catch((error) => {
-        log.networkError(name, registrationResponse.data, '__monitor', `encountered: ${error}`)
+        log.networkError('__monitor', `encountered '${error}' watching '${name}:${registrationResponse.data}'`)
     });
 
     let response = null;
@@ -51,7 +51,7 @@ module.exports.waitOnSemaphore = async function(name) {
             }
         );
     } catch(error) {
-        log.networkError(name, registrationResponse.data, '___waiter', `Encountered ${error} waiting for sempaphore ${sem.name}`)
+        log.networkError('___waiter', `encountered ${error} waiting for sempaphore '${name}:${registrationResponse.data}'`)
     }
 
     if( response ) {
@@ -76,7 +76,7 @@ module.exports.signalSemaphore = async function(sem) {
             }
         );
     } catch (error) {
-        log.networkError(sem.name, sem.id, '_signaler', `Encountered ${error} signaling sempaphore ${sem.name}`);
+        log.networkError('_signaler', `encountered '${error}' signaling sempaphore '${sem.name}:${sem.id}'`);
         return null;
     }
     log.networkStatus(sem.name, sem.id, '_signaler', `Semaphore ${sem.name} waited: ${sem.granted - sem.start} held: ${sem.released - sem.granted}`);
@@ -94,7 +94,7 @@ module.exports.observeSemaphore = async function(name) {
             }
         );
     } catch (error) {
-        log.networkError(name, '                 na                 ', '_observer', `Encountered ${error} observing sempaphore ${name}`);
+        log.networkError('_observer', `encountered '${error}' observing sempaphore '${name}'`);
         return null;
     }
     log.networkStatus(name, '                 na                 ', '_observer',
@@ -115,7 +115,7 @@ async function updateEventConfig(component, event, value) {
     try {
         response = await axios.patch(`${SEMAPHORE_HOST}/logconfig`, body, args);
     } catch (error) {
-        log.networkError('na    ', 'na                                  ', '__updater', `Encountered ${error} updating log config`);
+        log.networkError('__updater', `encountered '${error}' updating log config`);
         return null;
     }
     log.networkStatus('na    ', 'na                                  ', '__updater',
