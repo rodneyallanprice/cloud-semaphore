@@ -13,7 +13,7 @@ const logEvents = {
     'client': {
         'network_status': false,
         'network_errors': true,
-        'usage': false
+        'usage_errors': false
     },
     'test': {
         'harness_info': false,
@@ -102,9 +102,15 @@ exports.networkStatus = function(name, id, actor, action) {
     }
 }
 
-exports.networkError = function(name, key, actor, action) {
+exports.networkError = function(actor, action) {
     if(logEvents['client']['network_errors']) {
-        message('client', `[${name}:${key}:${actor}] ${action}`);
+        message('client', `[${actor}] ${action}`);
+    }
+}
+
+exports.usageError = function(actor, action) {
+    if(logEvents['client']['usage_errors']) {
+        message('client', `[${actor}] ${action}`);
     }
 }
 
