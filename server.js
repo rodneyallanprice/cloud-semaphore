@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const log = require('./log.js');
 
 module.exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggingFunction) {
-    class SemaphoreEmitter extends EventEmitter {};
+    class SemaphoreEmitter extends EventEmitter {}
 
     const releaseEmitter = new SemaphoreEmitter();
 
@@ -96,7 +96,7 @@ module.exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggin
     }
 
     function verifyClient(req, actor) {
-        clientConn = {
+        const clientConn = {
             status: 401,
             actor: actor,
             semaphoreName: null,
@@ -224,7 +224,7 @@ module.exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggin
         });
 
         log.semDebugEvent(clientConn, 'starting monitor');
-        const result = await new Promise((resolve, reject) => {
+        const result = await new Promise((resolve) => {
             releaseEmitter.on(clientConn.uid, (action) => {
                 resolve(action);
             });
@@ -254,7 +254,7 @@ module.exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggin
             return;
         }
 
-        const result = await new Promise((resolve, reject) => {
+        const result = await new Promise((resolve) => {
             runEmitter.on(clientConn.uid, (action) => {
                 resolve(action);
             });

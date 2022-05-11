@@ -42,8 +42,8 @@ exports.disableEvent = function(component, event) {
 }
 
 function deepMerge(current, updates) {
-    for( key of Object.keys(updates) ) {
-      if (!current.hasOwnProperty(key) || typeof updates[key] !== 'object') {
+    for( let key of Object.keys(updates) ) {
+      if (!Object.prototype.hasOwnProperty.call(current, key) || typeof updates[key] !== 'object') {
           current[key] = updates[key];
       } else {
           deepMerge(current[key], updates[key]);

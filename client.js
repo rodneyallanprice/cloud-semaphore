@@ -34,7 +34,7 @@ module.exports.waitOnSemaphore = async function(name) {
         }
     )
     .then((response) => {
-        log.networkStatus(name, registrationResponse.data, '__monitor', 'Monitor returned: ${response.status}')
+        log.networkStatus(name, registrationResponse.data, `__monitor', 'Monitor returned: ${response.status}`)
     })
     .catch((error) => {
         log.networkError(name, registrationResponse.data, '__monitor', `encountered: ${error}`)

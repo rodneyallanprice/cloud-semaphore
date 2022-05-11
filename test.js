@@ -1,14 +1,12 @@
 require('dotenv').config()
 const server = require('./server');
 const log = require('./log.js');
-const { response } = require('express');
 const {
     init,
     waitOnSemaphore,
     signalSemaphore,
     observeSemaphore,
     disableLogEvent,
-    enableLogEvent
 } = require('./client');
 
 const SERVER_PORT = process.env.PORT || 3202;
@@ -34,7 +32,7 @@ async function twoUsersWithDelay() {
     const user1 = await waitOnSemaphore(`TEST_SEM`);
     clientResult.user1 = user1;
     log.testInfo(`user1 holds ${user1.name}`);
-    return await new Promise((resolve, reject) => {
+    return await new Promise((resolve) => {
         waitOnSemaphore('TEST_SEM')
         .then((user2) => {
             clientResult.user2 = user2;
@@ -67,7 +65,7 @@ async function twoUsersWithCrash() {
     const user1 = await waitOnSemaphore(`TEST_SEM`);
     clientResult.user1 = user1;
     log.testInfo(`user1 holds ${user1.name}`);
-    return await new Promise((resolve, reject) => {
+    return await new Promise((resolve) => {
         waitOnSemaphore('TEST_SEM')
         .then((user2) => {
             clientResult.user2 = user2;
@@ -148,7 +146,8 @@ async function WaitOnSemaphoreCanNotReachServer(test) {
     return clientResult
 }
 
-function validateWaitOnSemaphoreCanNotReachServer(clientResult, test) {
+// eslint-disable-next-line no-unused-vars
+function validateWaitOnSemaphoreCanNotReachServer(clientResult, _test) {
     return new Promise((resolve) => {
         if( clientResult.sem ) {
             throw new Error('waitOnSemaphore returned a non null semaphore when the server could not be reached.');
@@ -168,7 +167,8 @@ async function SignalSemaphoreCanNotReachServer(test) {
     return clientResult;
 }
 
-function validateSignalSemaphoreCanNotReachServer(clientResult, test) {
+// eslint-disable-next-line no-unused-vars
+function validateSignalSemaphoreCanNotReachServer(clientResult, _test) {
     return new Promise((resolve) => {
         if( clientResult.result ) {
             throw new Error('signalSemaphore returned a non null semaphore when the server could not be reached.');
@@ -186,7 +186,8 @@ async function ObserveSemaphoreCanNotReachServer(test) {
     return clientResult
 }
 
-function validateObserveSemaphoreCanNotReachServer(clientResult, test) {
+// eslint-disable-next-line no-unused-vars
+function validateObserveSemaphoreCanNotReachServer(clientResult, _test) {
     return new Promise((resolve) => {
         if( clientResult.semData ) {
             throw new Error('observeSemaphore returned a non null response when the server could not be reached.');
@@ -196,7 +197,7 @@ function validateObserveSemaphoreCanNotReachServer(clientResult, test) {
 }
 
 function validateSemaphoreClean(sem) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if( Object.keys(sem.nodes).length > 0 ) {
             throw new Error(`Semaphore ${sem.name} has leftover nodes`);
         }
@@ -211,7 +212,7 @@ function validateSemaphoreClean(sem) {
 }
 
 function validateSemaphoreUsage(sem, owner) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if(!sem.granted ) {
             throw new Error(`Semaphore ${sem.name} was never granted to ${owner}`);
         }
@@ -232,7 +233,7 @@ async function validateMultipleSemaphoreUsage(users, owner) {
 
 
 function validateSemaphoreCrashedOwner(sem, owner) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         if(!sem.granted ) {
             throw new Error(`Semaphore ${sem.name} was never granted to ${owner}`);
         }
@@ -258,7 +259,7 @@ async function validateSemaphoresClean( clientResult, test ) {
 }
 
 async function delay(serverDelay, reason) {
-    return await new Promise((resolve, reject) => {
+    return await new Promise((resolve) => {
         log.testHarnessInfo(`Waiting for ${reason}`);
         setTimeout(() => {
             resolve();
@@ -308,7 +309,7 @@ async function run_test_case( test ) {
         log.testFlaw(test.name, error);
         result.error = error;
     })
-    .then((response) => {
+    .then(() => {
         if(test.server) {
             return stopListener(test.server);
         }
@@ -394,16 +395,18 @@ async function run() {
     await disableLogNoise();
 
     for( let i = 0; i < TEST_CASES.length; i++) {
-        await new Promise( async (resolve) => {
+        await new Promise( (resolve) => {
             swings++;
-            const result = await run_test_case(TEST_CASES[i])
-            if(result.error) {
-                log.testFailure(result.name, result.error);
-                misses++;
-            } else {
-                log.testSuccess(result.name);
-            }
-            resolve();
+            return run_test_case(TEST_CASES[i])
+            .then((result) => {
+                if(result.error) {
+                    log.testFailure(result.name, result.error);
+                    misses++;
+                } else {
+                    log.testSuccess(result.name);
+                }
+                resolve();
+            });
         })
     }
 
