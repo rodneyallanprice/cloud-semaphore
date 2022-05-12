@@ -335,7 +335,7 @@ const TEST_CASES = [
         client: singleUser,
         semNames: ['TEST_SEM'],
         validate: validateSingleUser,
-        timeOut: 2000
+        timeOut: 10000
     },
     {
         name: 'Two clients can obtain and release a semaphore consecutively',
