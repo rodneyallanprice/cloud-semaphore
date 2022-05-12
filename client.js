@@ -10,6 +10,10 @@ module.exports.init = function(semaphoreHost, semaphorePort, secure, apiKey) {
 };
 
 module.exports.waitOnSemaphore = async function(name) {
+    if(!name) {
+        log.usageError('client', 'called waitOnSemaphore without providing a semaphore name argument.')
+        return null;
+    }
     const sem = {
         name: name
     };
@@ -64,6 +68,10 @@ module.exports.waitOnSemaphore = async function(name) {
 }
 
 module.exports.signalSemaphore = async function(sem) {
+    if(!sem || !sem.name || !sem.id || !sem.started || !sem.granted) {
+        log.usageError('client', 'called signalSemaphore without providing a valid semaphore object')
+        return null;
+    }
     sem.released = Date.now();
     let releaseResponse;
     try {
@@ -84,6 +92,10 @@ module.exports.signalSemaphore = async function(sem) {
 }
 
 module.exports.observeSemaphore = async function(name) {
+    if(!name) {
+        log.usageError('client', 'called observeSemaphore without providing a semaphore name argument.')
+        return null;
+    }
     let releaseResponse;
     try {
         releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/observe?name=${name}`,
