@@ -196,6 +196,42 @@ function validateObserveSemaphoreCanNotReachServer(clientResult, _test) {
     });
 }
 
+// eslint-disable-next-line no-unused-vars
+async function endPointsRequireApiKey(_test) {
+    const clientResult = {}
+    clientResult.sem = await waitOnSemaphore('TEST_SEM');
+    await clientResult.sem.cancelHandle.cancel();
+    init('localhost', SERVER_PORT, false, 'bogus');
+    clientResult.signal = await signalSemaphore(clientResult.sem);
+
+    clientResult.wait = await waitOnSemaphore('TEST_SEM');
+    clientResult.observe = await observeSemaphore('TEST_SEM');
+    clientResult.logevent = await disableLogEvent('server', 'info');
+    // restore test defaults
+    init('localhost', SERVER_PORT, false, SERVER_API_KEYS[0]);
+    return clientResult
+}
+
+// eslint-disable-next-line no-unused-vars
+function validateEndPointsRequireApiKey(clientResult, _test) {
+    return new Promise((resolve) => {
+        if( clientResult.signal ) {
+            throw new Error('signalSemaphore returned a non-null response when a valid api_key was not used.');
+        }
+        if( clientResult.wait ) {
+            throw new Error('waitOnSemaphore returned a non-null response when a valid api_key was not used.');
+        }
+        if( clientResult.observe ) {
+            throw new Error('observeSemaphore returned a non-null response when a valid api_key was not used.');
+        }
+        if( clientResult.logevent ) {
+            throw new Error('disableLogEvent returned a non-null response when a valid api_key was not used.');
+        }
+        resolve();
+    });
+}
+
+
 function validateSemaphoreClean(sem) {
     return new Promise((resolve) => {
         if( Object.keys(sem.nodes).length > 0 ) {
@@ -377,6 +413,13 @@ const TEST_CASES = [
         client: ObserveSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
         validate: validateObserveSemaphoreCanNotReachServer,
+        timeOut: 100000
+    },
+    {
+        name: 'Server endpoints will return a 401 if a valid api key is not provided.',
+        client: endPointsRequireApiKey,
+        semNames: ['TEST_SEM'],
+        validate: validateEndPointsRequireApiKey,
         timeOut: 100000
     }
 ];
