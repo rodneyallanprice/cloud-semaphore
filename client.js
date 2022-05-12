@@ -23,6 +23,7 @@ module.exports.waitOnSemaphore = async function(name) {
     try {
         registrationResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/register?name=${name}`, {'headers': {'x-api-key': API_KEY}});
     } catch (error) {
+        log.networkError('registrar', `encountered '${error}' trying to register a client for '${name}'`);
         return null;
     }
 
