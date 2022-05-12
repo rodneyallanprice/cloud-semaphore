@@ -7,6 +7,7 @@ const {
     signalSemaphore,
     observeSemaphore,
     disableLogEvent,
+    enableLogEvent
 } = require('./client');
 
 const SERVER_PORT = process.env.PORT || 3202;
@@ -137,7 +138,7 @@ async function fiveHundredUsersWithDelay() {
     return multipleUsers(500, 1000);
 }
 
-async function WaitOnSemaphoreCanNotReachServer(test) {
+async function waitOnSemaphoreCanNotReachServer(test) {
     const clientResult = {}
     await stopListener(test.server);
     delete test.server;
@@ -156,7 +157,7 @@ function validateWaitOnSemaphoreCanNotReachServer(clientResult, _test) {
     });
 }
 
-async function SignalSemaphoreCanNotReachServer(test) {
+async function signalSemaphoreCanNotReachServer(test) {
     const clientResult = {}
     const sem = await waitOnSemaphore('TEST_SEM');
     clientResult.sem = sem;
@@ -177,7 +178,7 @@ function validateSignalSemaphoreCanNotReachServer(clientResult, _test) {
     });
 }
 
-async function ObserveSemaphoreCanNotReachServer(test) {
+async function observeSemaphoreCanNotReachServer(test) {
     const clientResult = {}
     await stopListener(test.server);
     delete test.server;
@@ -367,14 +368,14 @@ async function stopListener(listener) {
 
 const TEST_CASES = [
     {
-        name: 'One client can obtain and release a semaphore',
+        name: 'One client can obtain and release a semaphore.',
         client: singleUser,
         semNames: ['TEST_SEM'],
         validate: validateSingleUser,
         timeOut: 10000
     },
     {
-        name: 'Two clients can obtain and release a semaphore consecutively',
+        name: 'Two clients can obtain and release a semaphore consecutively.',
         client: twoUsersWithDelay,
         semNames: ['TEST_SEM'],
         validate: validateTwoUsersWithDelay,
@@ -388,29 +389,29 @@ const TEST_CASES = [
         timeOut: 10000
     },
     {
-        name: 'Five hundred clients can request a semaphore concurrently and obtain and release it consecutively',
+        name: 'Five hundred clients can request a semaphore concurrently and obtain and release it consecutively.',
         client: fiveHundredUsersWithDelay,
         semNames: ['TEST_SEM'],
         validate: validateMultipleUsers,
         timeOut: 100000
     },
     {
-        name: 'waitOnSemaphore will return null if server can not be reached for any reason.',
-        client: WaitOnSemaphoreCanNotReachServer,
+        name: 'The waitOnSemaphore function will return null if server can not be reached for any reason.',
+        client: waitOnSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
         validate: validateWaitOnSemaphoreCanNotReachServer,
         timeOut: 100000
     },
     {
-        name: 'signalSemaphore will return null if server can not be reached for any reason.',
-        client: SignalSemaphoreCanNotReachServer,
+        name: 'The signalSemaphore function will return null if server can not be reached for any reason.',
+        client: signalSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
         validate: validateSignalSemaphoreCanNotReachServer,
         timeOut: 100000
     },
     {
-        name: 'observeSemaphore will return null if server can not be reached for any reason.',
-        client: ObserveSemaphoreCanNotReachServer,
+        name: 'The observeSemaphore function will return null if server can not be reached for any reason.',
+        client: observeSemaphoreCanNotReachServer,
         semNames: ['TEST_SEM'],
         validate: validateObserveSemaphoreCanNotReachServer,
         timeOut: 100000
