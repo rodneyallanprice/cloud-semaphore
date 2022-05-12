@@ -17,7 +17,7 @@ module.exports.waitOnSemaphore = async function(name) {
     const sem = {
         name: name
     };
-    sem.start = Date.now();
+    sem.started = Date.now();
 
     let registrationResponse;
     try {
@@ -60,7 +60,7 @@ module.exports.waitOnSemaphore = async function(name) {
 
     if( response ) {
         sem.granted = Date.now()
-        log.networkStatus(name, registrationResponse.data, '___waiter', `Received ${response.status} after waiting ${sem.granted - sem.start} ms.`);
+        log.networkStatus(name, registrationResponse.data, '___waiter', `Received ${response.status} after waiting ${sem.granted - sem.started} ms.`);
         sem.id = registrationResponse.data;
         return sem;
     }
@@ -87,7 +87,7 @@ module.exports.signalSemaphore = async function(sem) {
         log.networkError('_signaler', `encountered '${error}' signaling sempaphore '${sem.name}:${sem.id}'`);
         return null;
     }
-    log.networkStatus(sem.name, sem.id, '_signaler', `Semaphore ${sem.name} waited: ${sem.granted - sem.start} held: ${sem.released - sem.granted}`);
+    log.networkStatus(sem.name, sem.id, '_signaler', `Semaphore ${sem.name} waited: ${sem.granted - sem.started} held: ${sem.released - sem.granted}`);
     return releaseResponse;
 }
 
