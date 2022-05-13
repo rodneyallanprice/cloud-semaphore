@@ -28,32 +28,46 @@ exports.setLoggingCallback = function(callback) {
     loggingFunction = callback;
 }
 
+function eventKnown(component, event) {
+    return Object.prototype.hasOwnProperty.call(logEvents, component) &&
+        Object.prototype.hasOwnProperty.call(logEvents[component], event);
+}
+
 function updateLogEvents(component, event, value) {
     logEvents[component][event] = value;
     return logEvents;
 }
 
 exports.enableEvent = function(component, event) {
+    if(!eventKnown(component, event )) {
+        return null;
+    }
     return updateLogEvents(component, event, true);
 }
 
 exports.disableEvent = function(component, event) {
+    if(!eventKnown(component, event )) {
+        return null;
+    }
     return updateLogEvents(component, event, false);
 }
 
-function deepMerge(current, updates) {
+function deepUpdate(current, updates) {
     for( let key of Object.keys(updates) ) {
-      if (!Object.prototype.hasOwnProperty.call(current, key) || typeof updates[key] !== 'object') {
-          current[key] = updates[key];
-      } else {
-          deepMerge(current[key], updates[key]);
-      }
+        if (!Object.prototype.hasOwnProperty.call(current, key)) {
+            return null;
+        }
+        if (typeof updates[key] !== 'object') {
+            current[key] = updates[key];
+        } else if (!deepUpdate(current[key], updates[key])) {
+            return null;
+        }
     }
     return current;
-  }
+}
 
 exports.patchEventConfig = function(modifications) {
-    return deepMerge(logEvents, modifications);
+    return deepUpdate(logEvents, modifications);
 }
 
 function message(who, what) {

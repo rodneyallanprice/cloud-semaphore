@@ -232,6 +232,70 @@ function validateEndPointsRequireApiKey(clientResult, _test) {
     });
 }
 
+function clone(a) {
+    return JSON.parse(JSON.stringify(a));
+ }
+// eslint-disable-next-line no-unused-vars
+async function changeLogConfig(_test) {
+    const clientResult = {}
+    clientResult.config1 = clone(await enableLogEvent('server', 'info'));
+    clientResult.config2 = clone(await disableLogEvent('server', 'info'));
+    clientResult.config3 = clone(await enableLogEvent('client', 'network_errors'));
+    clientResult.config4 = clone(await disableLogEvent('client', 'network_errors'));
+
+    return clientResult;
+}
+
+// eslint-disable-next-line no-unused-vars
+function validateChangeLogConfig(clientResult, _test) {
+    return new Promise((resolve) => {
+        if( clientResult.config1 == clientResult.config2 ) {
+            throw new Error('disableLogEvent() did not change the server log configuration');
+        }
+        if( clientResult.config1['server']['info'] != true ) {
+            throw new Error("enableLogEvent() did not change logEvent['server']['info'] to true.");
+        }
+        if( clientResult.config2['server']['info'] != false ) {
+            throw new Error("disableLogEvent() did not change logEvent['server']['info'] to false.");
+        }
+        if( clientResult.config3 == clientResult.config4 ) {
+            throw new Error('disableLogEvent() did not change the client log configuration');
+        }
+        if( clientResult.config3['client']['network_errors'] != true ) {
+            throw new Error("enableLogEvent() did not change logEvent['client']['network_errors'] to true.");
+        }
+        if( clientResult.config4['client']['network_errors'] != false ) {
+            throw new Error("disableLogEvent() did not change logEvent['client']['network_errors'] to false.");
+        }
+        resolve();
+    });
+}
+
+// eslint-disable-next-line no-unused-vars
+async function checkLogConfig(_test) {
+    const clientResult = {}
+    clientResult.config1 = clone(await enableLogEvent('server', 'bogus'));
+    clientResult.config2 = clone(await disableLogEvent('bogus', 'info'));
+    clientResult.config3 = clone(await enableLogEvent('client', 'bogus'));
+
+    return clientResult;
+}
+
+// eslint-disable-next-line no-unused-vars
+function validateCheckLogConfig(clientResult, _test) {
+    return new Promise((resolve) => {
+        if( clientResult.config1 ) {
+            throw new Error("enableLogEvent() created a log config event that does not exist.");
+        }
+        if( clientResult.config2 ) {
+            throw new Error("enableLogEvent() created a log config event that does not exist.");
+        }
+        if( clientResult.config3 ) {
+            throw new Error("enableLogEvent() created a log config event that does not exist.");
+        }
+        resolve();
+    });
+}
 
 function validateSemaphoreClean(sem) {
     return new Promise((resolve) => {
@@ -421,6 +485,18 @@ const TEST_CASES = [
         client: endPointsRequireApiKey,
         semNames: ['TEST_SEM'],
         validate: validateEndPointsRequireApiKey,
+        timeOut: 100000
+    },
+    {
+        name: 'log configuration can be changed.',
+        client: changeLogConfig,
+        validate: validateChangeLogConfig,
+        timeOut: 100000
+    },
+    {
+        name: 'only existinglog configuration can be changed.',
+        client: checkLogConfig,
+        validate: validateCheckLogConfig,
         timeOut: 100000
     }
 ];
