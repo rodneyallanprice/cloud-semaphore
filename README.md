@@ -71,6 +71,63 @@ changeLogTargets(console, callback);
 #### Return value
     NA
 
+## disableLogEvent()
+
+#### Syntax
+```
+disableLogEvent(component, eventType);
+
+```
+#### Parameters
+
+    component (string) (required)
+        The component can be 'server' or 'client' depending on what service creates the eventType.
+
+    eventType (string) (required)
+        The server event type can be one of the following:
+            - info (defaults to true)
+            - alert (defaults to true)
+            - sem_events (defaults to false)
+            - sem_transition (defaults to false)
+            - debug (defaults to false)
+        The client event type can be one of the following:
+            - network_status (defaults to false)
+            - network_errors (defaults to true)
+            - usage_errors (defaults to false)
+
+#### Return value
+    A JSON object describing the log event configuration after the requested event was disabled.
+    Null is returned when arguments are not recognized or when the server can not be reached.
+
+## enableLogEvent()
+
+#### Syntax
+```
+enableLogEvent(component, eventType);
+
+```
+#### Parameters
+
+    component (string) (required)
+        The component can be 'server' or 'client' depending on what service creates the eventType.
+
+    eventType (string) (required)
+        The server event type can be one of the following:
+            - info (defaults to true)
+            - alert (defaults to true)
+            - sem_events (defaults to false)
+            - sem_transition (defaults to false)
+            - debug (defaults to false)
+        The client event type can be one of the following:
+            - network_status (defaults to false)
+            - network_errors (defaults to true)
+            - usage_errors (defaults to false)
+
+#### Return value
+    A JSON object describing the log event configuration after the requested event was enabled.
+    Null is returned when arguments are not recognized or when the server can not be reached.
+
+
 ## init()
     This function is called once before any other APIs described here to instruct the library
     how to contact the semaphore server.
@@ -103,6 +160,53 @@ init(semaphoreHost, semaphorePort, secure, apiKey)
 #### Return value
     NA
 
+## observeSemaphore()
+    This function is valuable to see the current state of any semaphore and the the
+    requests waiting for it.
+
+#### Syntax
+```
+observeSemaphore(name)
+
+```
+
+#### Parameters
+
+    name (object) (required)
+        A name to identify the critical section of code the semaphore protects.
+
+#### Return value
+    A JSON object is returned showing the current owner and waiters.
+
+## server(port, acceptedApiKeys, sslCert, sslKey)
+
+    This function is used to start the semaphore server. The server is typically run
+    in its own process and by necessity in a single instance.
+
+#### Syntax
+```
+server(port, acceptedApiKeys)
+server(port, acceptedApiKeys, sslCert, sslKey)
+
+```
+
+#### Parameters
+
+    port (number) (required)
+        The TCP port where the server will listen.
+
+    acceptedApiKeys (array of strings) (required)
+        A list of keys the server will accept for authentication.
+
+    sslCert (string)
+        The server will require ssl connections when a certificate and key are provided
+
+    sslKey (string)
+        The server will require ssl connections when a certificate and key are provided
+
+
+#### Return value (object)
+    The returned object is an HTTP listener.
 
 ## signalSemaphore(semaphore)
 
@@ -138,7 +242,7 @@ waitOnSemaphore(name)
 
 #### Parameters
     name (object) (required)
-        A name to identify the critical section of code the semaphore protects. (string)
+        A name to identify the critical section of code the semaphore protects.
 
 #### Return value
     The returned value is an object describing the requested semaphore. The semaphore is
