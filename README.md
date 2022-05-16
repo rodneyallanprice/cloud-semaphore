@@ -51,7 +51,7 @@ doSomethingImportant();
 APIs
 -------
 
-**changeLogTargets()**
+## **changeLogTargets()**
 
 Syntax
 ```
