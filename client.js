@@ -74,9 +74,8 @@ exports.signalSemaphore = async function(sem) {
         return null;
     }
     sem.released = Date.now();
-    let releaseResponse;
     try {
-        releaseResponse = await axios.get(`${SEMAPHORE_HOST}/semaphore/signal?name=${sem.name}`,
+        await axios.get(`${SEMAPHORE_HOST}/semaphore/signal?name=${sem.name}`,
             {
                 'headers': {
                     'x-api-key': API_KEY,
@@ -86,10 +85,10 @@ exports.signalSemaphore = async function(sem) {
         );
     } catch (error) {
         log.networkError('_signaler', `encountered '${error}' signaling sempaphore '${sem.name}:${sem.id}'`);
-        return null;
+        return false;
     }
     log.networkStatus(sem.name, sem.id, '_signaler', `Semaphore ${sem.name} waited: ${sem.granted - sem.started} held: ${sem.released - sem.granted}`);
-    return releaseResponse;
+    return true;
 }
 
 exports.observeSemaphore = async function(name) {
