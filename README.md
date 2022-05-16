@@ -51,15 +51,15 @@ doSomethingImportant();
 APIs
 -------
 
-### **changeLogTargets()**
+### changeLogTargets()
 
-### Syntax
+#### Syntax
 ```
 changeLogTargets(console);
 changeLogTargets(console, callback);
 
 ```
-### Parameters
+#### Parameters
 
     console (boolean) (required)
         Enabled log events will be sent to the console when console is true.
@@ -68,14 +68,14 @@ changeLogTargets(console, callback);
         This function will be called with a string describing log events when this function is
         provided.
 
-### Return value
+#### Return value
     NA
 
-### **init()**
+### init()
     This function is called once before any other APIs described here to instruct the library
     how to contact the semaphore server.
 
-### Syntax
+#### Syntax
 ```
 init(semaphoreHost, semaphorePort)
 init(semaphoreHost, semaphorePort, secure)
@@ -83,7 +83,7 @@ init(semaphoreHost, semaphorePort, secure, apiKey)
 
 ```
 
-### Parameters
+#### Parameters
 
     semaphoreHost (string)
         The hostname where the semaphore server is listening.
@@ -100,47 +100,47 @@ init(semaphoreHost, semaphorePort, secure, apiKey)
         Giving each client instance a unique key is helpful when debuging applications
         that do not release the semaphore quickly and correctly.
 
-### Return value
+#### Return value
     NA
 
 
-### **signalSemaphore(semaphore)**
+### signalSemaphore(semaphore)
 
     This function is used to release a currently held semaphore. When called, the next
     consumer requesting the semaphore will be given it.
 
-### Syntax
+#### Syntax
 ```
 signalSemaphore(semaphore)
 
 ```
 
-### Parameters
+#### Parameters
 
     semaphore (object) (required)
         The object returned by waitOnSemaphore must be passed as an argument to this
         function.
 
-### Return value (boolean)
+#### Return value (boolean)
     The value 'true' will be returned when the semaphore is recognized and successfully
     released.
 
-### **waitOnSemaphore(name)**
+### waitOnSemaphore(name)
 
     This function creates a connections to the server specified in the init function and
     returns when the semaphore in owned exclusively by the caller.
 
-### Syntax
+#### Syntax
 ```
 waitOnSemaphore(name)
 
 ```
 
-### Parameters
+#### Parameters
     name (object) (required)
         A name to identify the critical section of code the semaphore protects. (string)
 
-### Return value
+#### Return value
     The returned value is an object describing the requested semaphore. The semaphore is
     released by passing this object to signalSemaphore. If the semaphore server can not
     be contacted for any reason, a null will be returned, a log event created and the
