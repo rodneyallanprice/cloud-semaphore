@@ -1,4 +1,5 @@
 let loggingFunction = null;
+let logToConsole = true;
 
 /******************* logging *******************/
 
@@ -26,6 +27,10 @@ const logEvents = {
 
 exports.setLoggingCallback = function(callback) {
     loggingFunction = callback;
+}
+
+exports.toConsole = function(console) {
+    logToConsole = console;
 }
 
 function eventKnown(component, event) {
@@ -74,7 +79,9 @@ function message(who, what) {
     if( loggingFunction ) {
         loggingFunction( what );
     }
-    console.log(`${who}: ${what}`);
+    if( logToConsole ) {
+        console.log(`${who}: ${what}`);
+    }
 }
 
 function clientMessage(name, id, actor, action) {

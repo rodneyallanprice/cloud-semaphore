@@ -9,3 +9,4 @@ module.exports.signalSemaphore = clientSrc.signalSemaphore;
 module.exports.observeSemaphore = clientSrc.observeSemaphore;
 module.exports.disableLogEvent = clientSrc.init.disableLogEvent;
 module.exports.enableLogEvent = clientSrc.init.enableLogEvent;
+module.exports.changeLogTargets = clientSrc.changeLogTargets;

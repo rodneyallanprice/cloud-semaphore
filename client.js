@@ -9,6 +9,13 @@ exports.init = function(semaphoreHost, semaphorePort, secure, apiKey) {
     API_KEY = apiKey;
 };
 
+exports.changeLogTargets = function(console, loggingFunction) {
+    log.toConsole(console);
+    if(loggingFunction) {
+        log.setLoggingCallback(loggingFunction);
+    }
+}
+
 exports.waitOnSemaphore = async function(name) {
     if(!name) {
         log.usageError('client', 'called waitOnSemaphore without providing a semaphore name argument.')
