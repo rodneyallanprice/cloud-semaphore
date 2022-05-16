@@ -1,7 +1,7 @@
 const axios = require('axios');
 const log = require('./log.js');
 
-let SEMAPHORE_HOST='';
+let SEMAPHORE_HOST='http://localhost:3202';
 let API_KEY = '';
 
 exports.init = function(semaphoreHost, semaphorePort, secure, apiKey) {
