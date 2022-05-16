@@ -5,7 +5,7 @@ const EventEmitter = require('events');
 const crypto = require('crypto');
 const log = require('./log.js');
 
-module.exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggingFunction) {
+exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggingFunction) {
     class SemaphoreEmitter extends EventEmitter {}
 
     const releaseEmitter = new SemaphoreEmitter();

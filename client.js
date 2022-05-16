@@ -4,12 +4,12 @@ const log = require('./log.js');
 let SEMAPHORE_HOST='';
 let API_KEY = '';
 
-module.exports.init = function(semaphoreHost, semaphorePort, secure, apiKey) {
+exports.init = function(semaphoreHost, semaphorePort, secure, apiKey) {
     SEMAPHORE_HOST = `http${secure ? 's': ''}://${semaphoreHost}${semaphorePort? ':' + semaphorePort : '' }`;
     API_KEY = apiKey;
 };
 
-module.exports.waitOnSemaphore = async function(name) {
+exports.waitOnSemaphore = async function(name) {
     if(!name) {
         log.usageError('client', 'called waitOnSemaphore without providing a semaphore name argument.')
         return null;
@@ -68,7 +68,7 @@ module.exports.waitOnSemaphore = async function(name) {
     return null;
 }
 
-module.exports.signalSemaphore = async function(sem) {
+exports.signalSemaphore = async function(sem) {
     if(!sem || !sem.name || !sem.id || !sem.started || !sem.granted) {
         log.usageError('client', 'called signalSemaphore without providing a valid semaphore object')
         return null;
@@ -92,7 +92,7 @@ module.exports.signalSemaphore = async function(sem) {
     return releaseResponse;
 }
 
-module.exports.observeSemaphore = async function(name) {
+exports.observeSemaphore = async function(name) {
     if(!name) {
         log.usageError('client', 'called observeSemaphore without providing a semaphore name argument.')
         return null;
@@ -136,14 +136,14 @@ async function updateEventConfig(component, event, value) {
     return response.data;
 }
 
-module.exports.disableLogEvent = async function(component, event) {
+exports.disableLogEvent = async function(component, event) {
     if(component != 'server') {
         return Promise.resolve(log.disableEvent(component, event));
     }
     return await updateEventConfig(component, event, false);
 }
 
-module.exports.enableLogEvent = async function(component, event) {
+exports.enableLogEvent = async function(component, event) {
     if(component != 'server') {
         return Promise.resolve(log.enableEvent(component, event));
     }
