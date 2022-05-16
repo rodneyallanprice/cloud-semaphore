@@ -12,7 +12,7 @@ npm install -g cloud-semaphore
 ```
 
 Usage - start the server:
--------------------------
+===================
 ```
 const semaphore = require('cloud-semaphore');
 
@@ -22,7 +22,7 @@ semaphore.server(3202, ['some-api-key']);
 ```
 
 Usage - Obtain and Release a semaphore:
--------------------------
+===================
 ```
 const {
     init,
@@ -49,7 +49,7 @@ doSomethingImportant();
 
 
 APIs
--------
+===================
 
 ## changeLogTargets()
 
