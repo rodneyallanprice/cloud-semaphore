@@ -62,7 +62,7 @@ changeLogTargets(console, callback);
 #### Parameters
 
     console (boolean) (required)
-        Enabled log events will be sent to the console when console is true.
+        Enabled log events will be sent to the console when 'console' is true.
 
     callback (function(message))
         This function will be called with a string describing log events when this function is
@@ -150,18 +150,18 @@ init(semaphoreHost, semaphorePort, secure, apiKey)
 
     secure (boolean)
         Does the server support ssl. This service should never run on an unprotected
-        connection. API keys are pass in the headers an must be be protected.
+        connection. API keys are passed in the headers and must be protected.
 
     apiKey (string)
         The string this instance will use to authenticate to the semaphore server.
-        Giving each client instance a unique key is helpful when debuging applications
+        Giving each client instance a unique key is helpful when debugging applications
         that do not release the semaphore quickly and correctly.
 
 #### Return value
     NA
 
 ## observeSemaphore()
-    This function is valuable to see the current state of any semaphore and the the
+    This function is valuable to see the current state of any semaphore and the
     requests waiting for it.
 
 #### Syntax
@@ -231,8 +231,8 @@ signalSemaphore(semaphore)
 
 ## waitOnSemaphore(name)
 
-    This function creates a connections to the server specified in the init function and
-    returns when the semaphore in owned exclusively by the caller.
+    This function creates connections to the server specified in the init function and
+    returns when the semaphore is owned exclusively by the caller.
 
 #### Syntax
 ```
