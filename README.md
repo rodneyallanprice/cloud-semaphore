@@ -3,6 +3,8 @@ Cloud-Semaphore
 
 *Provides semaphore-like functionality for multi-instance node applications that need to protect a critical section of code.
 
+Install
+=======
 
 The npm should be installed on one server and all client instances as so:
 
@@ -11,8 +13,9 @@ npm install -g cloud-semaphore
 
 ```
 
-Usage - start the server:
+Usage - Start the server:
 ===================
+
 ```
 const semaphore = require('cloud-semaphore');
 
@@ -21,8 +24,9 @@ semaphore.server(3202, ['some-api-key']);
 
 ```
 
-Usage - Obtain and Release a semaphore:
+Usage - Obtain and release a semaphore:
 ===================
+
 ```
 const {
     init,
@@ -47,6 +51,11 @@ doSomethingImportant();
 
 ```
 
+Best Practice
+===================
+
+As with traditional semaphores, care should be taken to minimize the time any one client holds
+the semaphore. Code that fails to release a semaphore will cause all other requests to block until the client process exits or its idle connections are closed. The server will notice that the connection holding the semaphore has closed and will then release it to the next waiter.
 
 APIs
 ===================
