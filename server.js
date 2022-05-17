@@ -5,7 +5,7 @@ const EventEmitter = require('events');
 const crypto = require('crypto');
 const log = require('./log.js');
 
-exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggingFunction) {
+exports.server = function (port, acceptedApiKeys, sslCert, sslKey) {
     class SemaphoreEmitter extends EventEmitter {}
 
     const releaseEmitter = new SemaphoreEmitter();
@@ -19,8 +19,6 @@ exports.server = function (port, acceptedApiKeys, sslCert, sslKey, loggingFuncti
     app.use(express.json());
 
     app.set('json spaces', 2)
-
-    log.setLoggingCallback(loggingFunction);
 
     /******************* create semaphore client *******************/
 
