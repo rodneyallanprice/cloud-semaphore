@@ -1,7 +1,7 @@
 Cloud-Semaphore
 ===================
 
-*Provides semaphore-like functionality for multi-instance node applications that need to protect a critical section of code.
+Provides semaphore-like functionality for multi-instance node applications that need to protect a critical section of code.
 
 Install
 =======
