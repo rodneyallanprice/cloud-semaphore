@@ -1,6 +1,6 @@
 {
   "name": "cloud-semaphore",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A web service that provides semaphore-like functionality to multi-instance node applications.",
   "main": "index.js",
   "scripts": {
